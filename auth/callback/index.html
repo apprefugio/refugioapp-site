@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refúgio - Redirecionando...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background: #5a6fd6;
+        }
+        .error {
+            color: #e74c3c;
+            display: none;
+        }
+        .success {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🙏</div>
+        <h1 id="title">Abrindo o Refúgio...</h1>
+        <div class="spinner" id="spinner"></div>
+        <p id="message">Aguarde enquanto redirecionamos você para o aplicativo.</p>
+        <a href="#" id="manualButton" class="button" style="display: none;">Abrir o Refúgio</a>
+        <p id="errorMessage" class="error"></p>
+    </div>
+
+    <script>
+        // Configuração do deep link do app
+        const APP_SCHEME = 'refugio';
+
+        function redirectToApp() {
+            const hash = window.location.hash;
+            const search = window.location.search;
+
+            // Construir a URL do deep link
+            let deepLink = APP_SCHEME + '://auth/callback';
+
+            // Adicionar os parâmetros (hash contém os tokens do Supabase)
+            if (hash) {
+                deepLink += hash;
+            } else if (search) {
+                deepLink += search;
+            }
+
+            console.log('Redirecionando para:', deepLink);
+
+            // Mostrar botão manual após 2 segundos (caso o redirect automático falhe)
+            setTimeout(function() {
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('title').textContent = 'Quase lá!';
+                document.getElementById('message').textContent = 'Clique no botão abaixo para abrir o aplicativo:';
+                document.getElementById('manualButton').style.display = 'inline-block';
+                document.getElementById('manualButton').href = deepLink;
+            }, 2000);
+
+            // Tentar abrir o app automaticamente
+            window.location.href = deepLink;
+        }
+
+        // Verificar se há tokens na URL
+        if (window.location.hash || window.location.search) {
+            redirectToApp();
+        } else {
+            // Sem tokens - mostrar mensagem de erro
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('title').textContent = 'Link inválido';
+            document.getElementById('message').textContent = 'Este link não contém as informações necessárias. Por favor, solicite um novo link no aplicativo.';
+        }
+    </script>
+</body>
+</html>

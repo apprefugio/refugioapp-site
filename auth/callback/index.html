@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Refúgio - Redirecionando...</title>
+    <title>Refúgio - Confirmação</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #5BA4D4 0%, #3D8BC9 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -27,7 +27,7 @@
             text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        .logo {
+        .icon {
             font-size: 64px;
             margin-bottom: 20px;
         }
@@ -45,7 +45,7 @@
             width: 40px;
             height: 40px;
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #5BA4D4;
+            border-top: 4px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 20px auto;
@@ -56,78 +56,152 @@
         }
         .button {
             display: inline-block;
-            background: #5BA4D4;
+            background: #667eea;
             color: white;
             padding: 15px 30px;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
-            margin-top: 20px;
+            margin-top: 10px;
+            transition: background 0.2s;
         }
         .button:hover {
-            background: #3D8BC9;
+            background: #5a6fd6;
         }
-        .error {
-            color: #e74c3c;
-            display: none;
+        .button-secondary {
+            background: #95a5a6;
         }
-        .success {
+        .button-secondary:hover {
+            background: #7f8c8d;
+        }
+        .success-icon {
             color: #27ae60;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🙏</div>
-        <h1 id="title">Abrindo o Refúgio...</h1>
+        <div class="icon" id="icon">🙏</div>
+        <h1 id="title">Processando...</h1>
         <div class="spinner" id="spinner"></div>
-        <p id="message">Aguarde enquanto redirecionamos você para o aplicativo.</p>
-        <a href="#" id="manualButton" class="button" style="display: none;">Abrir o Refúgio</a>
-        <p id="errorMessage" class="error"></p>
+        <p id="message">Aguarde um momento...</p>
+        <div class="buttons" id="buttons" style="display: none;">
+            <a href="#" id="openAppButton" class="button">Abrir o Refúgio</a>
+            <a href="https://refugioapp.com.br" class="button button-secondary">Ir para o site</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 Refúgio App
+        </div>
     </div>
 
     <script>
-        // Configuração do deep link do app
         const APP_SCHEME = 'refugio';
 
-        function redirectToApp() {
-            const hash = window.location.hash;
-            const search = window.location.search;
+        function getUrlParams() {
+            // Pegar parâmetros do hash (OAuth tokens)
+            const hash = window.location.hash.substring(1);
+            const hashParams = new URLSearchParams(hash);
 
-            // Construir a URL do deep link
-            let deepLink = APP_SCHEME + '://auth/callback';
+            // Pegar parâmetros da query string
+            const searchParams = new URLSearchParams(window.location.search);
 
-            // Adicionar os parâmetros (hash contém os tokens do Supabase)
-            if (hash) {
-                deepLink += hash;
-            } else if (search) {
-                deepLink += search;
-            }
-
-            console.log('Redirecionando para:', deepLink);
-
-            // Mostrar botão manual após 2 segundos (caso o redirect automático falhe)
-            setTimeout(function() {
-                document.getElementById('spinner').style.display = 'none';
-                document.getElementById('title').textContent = 'Quase lá!';
-                document.getElementById('message').textContent = 'Clique no botão abaixo para abrir o aplicativo:';
-                document.getElementById('manualButton').style.display = 'inline-block';
-                document.getElementById('manualButton').href = deepLink;
-            }, 2000);
-
-            // Tentar abrir o app automaticamente
-            window.location.href = deepLink;
+            return {
+                // OAuth tokens
+                accessToken: hashParams.get('access_token'),
+                refreshToken: hashParams.get('refresh_token'),
+                type: hashParams.get('type') || searchParams.get('type'),
+                // Confirmation tokens
+                token: searchParams.get('token'),
+                tokenHash: searchParams.get('token_hash'),
+            };
         }
 
-        // Verificar se há tokens na URL
-        if (window.location.hash || window.location.search) {
-            redirectToApp();
-        } else {
-            // Sem tokens - mostrar mensagem de erro
+        function showSuccess(title, message) {
             document.getElementById('spinner').style.display = 'none';
-            document.getElementById('title').textContent = 'Link inválido';
-            document.getElementById('message').textContent = 'Este link não contém as informações necessárias. Por favor, solicite um novo link no aplicativo.';
+            document.getElementById('icon').textContent = '✅';
+            document.getElementById('icon').className = 'icon success-icon';
+            document.getElementById('title').textContent = title;
+            document.getElementById('message').textContent = message;
+            document.getElementById('buttons').style.display = 'flex';
+
+            // Deep link para abrir o app
+            const deepLink = APP_SCHEME + '://auth/callback' + window.location.hash;
+            document.getElementById('openAppButton').href = deepLink;
         }
+
+        function showError(title, message) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('icon').textContent = '❌';
+            document.getElementById('title').textContent = title;
+            document.getElementById('message').textContent = message;
+            document.getElementById('buttons').style.display = 'flex';
+            document.getElementById('openAppButton').style.display = 'none';
+        }
+
+        function processCallback() {
+            const params = getUrlParams();
+
+            // Verificar tipo de callback
+            if (params.type === 'signup' || params.type === 'email') {
+                // Confirmação de email de cadastro
+                showSuccess(
+                    'Email confirmado!',
+                    'Sua conta foi verificada com sucesso. Agora você pode fazer login no aplicativo.'
+                );
+            } else if (params.type === 'recovery') {
+                // Recuperação de senha
+                showSuccess(
+                    'Link válido!',
+                    'Você será redirecionado para definir sua nova senha.'
+                );
+                // Tentar abrir app automaticamente
+                setTimeout(function() {
+                    window.location.href = APP_SCHEME + '://auth/callback' + window.location.hash;
+                }, 1500);
+            } else if (params.type === 'email_change') {
+                // Mudança de email
+                showSuccess(
+                    'Email alterado!',
+                    'Seu email foi alterado com sucesso.'
+                );
+            } else if (params.accessToken) {
+                // Login OAuth (Google, etc)
+                showSuccess(
+                    'Login realizado!',
+                    'Redirecionando para o aplicativo...'
+                );
+                // Tentar abrir app automaticamente
+                setTimeout(function() {
+                    window.location.href = APP_SCHEME + '://auth/callback' + window.location.hash;
+                }, 1000);
+            } else if (params.token || params.tokenHash) {
+                // Token de confirmação de email (formato antigo)
+                showSuccess(
+                    'Email confirmado!',
+                    'Sua conta foi verificada com sucesso. Agora você pode fazer login no aplicativo.'
+                );
+            } else {
+                // Sem parâmetros válidos
+                showError(
+                    'Link inválido',
+                    'Este link não contém as informações necessárias ou já foi utilizado.'
+                );
+            }
+        }
+
+        // Processar callback
+        processCallback();
     </script>
 </body>
 </html>
